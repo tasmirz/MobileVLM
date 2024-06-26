@@ -19,7 +19,7 @@ def inference_once(args):
     tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.load_8bit, args.load_4bit)
 
     images = [Image.open(args.image_file).convert("RGB")]
-    images_tensor = process_images(images, image_processor, model.config).to(model.device, dtype=torch.float16)
+    images_tensor = process_images(images, image_processor, model.config).to(model.device, dtype=torch.float32)
 
     conv = conv_templates[args.conv_mode].copy()
     conv.append_message(conv.roles[0], DEFAULT_IMAGE_TOKEN + "\n" + args.prompt)
@@ -27,7 +27,7 @@ def inference_once(args):
     prompt = conv.get_prompt()
     stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
     # Input
-    input_ids = (tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).cuda())
+    input_ids = (tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).cpu())
     stopping_criteria = KeywordsStoppingCriteria([stop_str], tokenizer, input_ids)
     # Inference
     with torch.inference_mode():

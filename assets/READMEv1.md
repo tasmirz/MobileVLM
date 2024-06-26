@@ -60,7 +60,7 @@ model_path = 'mtgv/MobileLLaMA-1.4B-Chat'
 
 tokenizer = LlamaTokenizer.from_pretrained(model_path)
 model = LlamaForCausalLM.from_pretrained(
-    model_path, torch_dtype=torch.float16, device_map='auto',
+    model_path, torch_dtype=torch.float32, device_map='auto',
 )
 
 prompt = 'Q: What is the largest animal?\nA:'

@@ -252,7 +252,7 @@ class MobileVLMMetaForCausalLM(ABC):
                     p.requires_grad = False
 
 
-def load_pretrained_model(model_path, load_8bit=False, load_4bit=False, device_map="auto", device="cuda"):
+def load_pretrained_model(model_path, load_8bit=False, load_4bit=False, device_map="auto", device="cpu"):
 
     from mobilevlm.model.mobilellama import MobileLlamaForCausalLM
 
@@ -264,15 +264,15 @@ def load_pretrained_model(model_path, load_8bit=False, load_4bit=False, device_m
         kwargs['load_in_4bit'] = True
         kwargs['quantization_config'] = BitsAndBytesConfig(
             load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_compute_dtype=torch.float32,
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type='nf4'
         )
     else:
-        kwargs['torch_dtype'] = torch.float16
+        kwargs['torch_dtype'] = torch.float32
 
     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
-    model = MobileLlamaForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+    model = MobileLlamaForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs,offload_folder="offload")
 
     mm_use_im_start_end = getattr(model.config, "mm_use_im_start_end", False)
     mm_use_im_patch_token = getattr(model.config, "mm_use_im_patch_token", True)
@@ -287,7 +287,7 @@ def load_pretrained_model(model_path, load_8bit=False, load_4bit=False, device_m
         vision_tower.load_image_processor()
     elif not vision_tower.is_loaded:
         vision_tower.load_model()
-    vision_tower.to(device=device, dtype=torch.float16)
+    vision_tower.to(device=device, dtype=torch.float32)
     image_processor = vision_tower.image_processor
 
     if hasattr(model.config, "max_sequence_length"):

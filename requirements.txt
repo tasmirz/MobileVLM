@@ -1,6 +1,8 @@
+packaging>=0.0.0
 torch==2.0.1
 torchvision==0.15.2
 deepspeed==0.9.5
+#iinstalled after installing flash-attn
 transformers==4.33.1
 tokenizers==0.13.3
 sentencepiece==0.1.99
@@ -21,3 +23,5 @@ einops==0.6.1
 einops-exts==0.0.4
 timm==0.9.12
 flash-attn==2.3.2
+# $pip uninstall setuptools && pip install setuptools==69.5.1 - bypasses no packaging module
+# Needed to install cuda and set CUDA_PATH env var

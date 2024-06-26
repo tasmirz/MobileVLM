@@ -737,7 +737,7 @@ def train():
     parser = transformers.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     local_rank = training_args.local_rank
-    compute_dtype = (torch.float16 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
+    compute_dtype = (torch.float32 if training_args.fp16 else (torch.bfloat32 if training_args.bf16 else torch.float32))
 
     bnb_model_from_pretrained_args = {}
     if training_args.bits in [4, 8]:
@@ -782,7 +782,7 @@ def train():
 
     if training_args.bits in [4, 8]:
         from peft import prepare_model_for_kbit_training
-        model.config.torch_dtype=(torch.float32 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
+        model.config.torch_dtype=(torch.float32 if training_args.fp16 else (torch.bfloat32 if training_args.bf16 else torch.float32))
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=training_args.gradient_checkpointing)
 
     if training_args.gradient_checkpointing:
@@ -805,9 +805,9 @@ def train():
         )
         if training_args.bits == 16:
             if training_args.bf16:
-                model.to(torch.bfloat16)
+                model.to(torch.bfloat32)
             if training_args.fp16:
-                model.to(torch.float16)
+                model.to(torch.float32)
         rank0_print("Adding LoRA adapters...")
         model = get_peft_model(model, lora_config)
 
@@ -847,7 +847,7 @@ def train():
         model.get_model().initialize_vision_modules(model_args=model_args, fsdp=training_args.fsdp)  
         
         vision_tower = model.get_vision_tower()
-        vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
+        vision_tower.to(dtype=torch.bfloat32 if training_args.bf16 else torch.float32, device=training_args.device)
 
         data_args.image_processor = vision_tower.image_processor
         data_args.is_multimodal = True
@@ -886,13 +886,13 @@ def train():
         for name, module in model.named_modules():
             if isinstance(module, LoraLayer):
                 if training_args.bf16:
-                    module = module.to(torch.bfloat16)
+                    module = module.to(torch.bfloat32)
             if 'norm' in name:
                 module = module.to(torch.float32)
             if 'lm_head' in name or 'embed_tokens' in name:
                 if hasattr(module, 'weight'):
                     if training_args.bf16 and module.weight.dtype == torch.float32:
-                        module = module.to(torch.bfloat16)
+                        module = module.to(torch.bfloat32)
 
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
     trainer = VLMTrainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)

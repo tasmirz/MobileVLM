@@ -90,8 +90,8 @@ MobileVLM: Vision Language Model for Mobile Devices
 
 2. Install Package
     ```Shell
-    conda create -n mobilevlm python=3.10 -y
-    conda activate mobilevlm
+    python3.10 -m venv env
+    source env/bin/activate  
     pip install --upgrade pip
     pip install -r requirements.txt
     ```
@@ -107,7 +107,7 @@ model_path = 'mtgv/MobileLLaMA-1.4B-Chat'
 
 tokenizer = LlamaTokenizer.from_pretrained(model_path)
 model = LlamaForCausalLM.from_pretrained(
-    model_path, torch_dtype=torch.float16, device_map='auto',
+    model_path, torch_dtype=torch.float32, device_map='auto',
 )
 
 prompt = 'Q: What is the largest animal?\nA:'
